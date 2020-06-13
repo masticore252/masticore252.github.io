@@ -11,7 +11,7 @@ var jekyll   = process.platform === 'win32' ? 'jekyll.bat' : 'jekyll';
 
 // Compile files
 const sassCompile = function (done) {
-    gulp.src('assets/css/scss/main.scss')
+    return gulp.src('assets/css/scss/main.scss')
         .pipe(sass({
             outputStyle: 'expanded',
             onError: browserSync.notify
@@ -20,23 +20,19 @@ const sassCompile = function (done) {
         .pipe(gulp.dest('_site/assets/css'))
         .pipe(browserSync.reload({stream:true}))
         .pipe(gulp.dest('assets/css'));
-
-        done();
 }
 
 // Compression images
 const img = function(done) {
-	return gulp.src('assets/img/**/*')
-		.pipe(cache(imagemin({
-			interlaced: true,
-			progressive: true,
-			svgoPlugins: [{removeViewBox: false}],
-			use: [pngquant()]
-		})))
-    .pipe(gulp.dest('_site/assets/img'))
-    .pipe(browserSync.reload({stream:true}));
-
-    done();
+    return gulp.src('assets/img/**/*')
+        .pipe(cache(imagemin({
+            interlaced: true,
+            progressive: true,
+            svgoPlugins: [{removeViewBox: false}],
+            use: [pngquant()]
+        })))
+        .pipe(gulp.dest('_site/assets/img'))
+        .pipe(browserSync.reload({stream:true}));
 }
 
 // Build the Jekyll Site
@@ -52,7 +48,7 @@ const jekyllRebuild = gulp.series(jekyllBuild, function (done) {
 });
 
 // Wait for jekyll-build, then launch the Server
-const browserSyncTask = gulp.series(sassCompile, img, jekyllBuild, function(done) {
+const browserSyncTask = gulp.series(sassCompile, img, jekyllBuild, function (done) {
     browserSync({
         server: {
             baseDir: '_site'
@@ -66,12 +62,12 @@ const browserSyncTask = gulp.series(sassCompile, img, jekyllBuild, function(done
 gulp.watch('assets/css/scss/**/*.scss', sassCompile);
 gulp.watch('assets/js/**/*.js', jekyllRebuild);
 gulp.watch('assets/img/**/*', img);
-gulp.watch(['*.html', '_layouts/*.html', '_includes/*.html', '_pages/*.html', '_posts/*'], jekyllRebuild);
+gulp.watch(['*.html', '_layouts/*.html', '_includes/*.html', '_pages/*.html', '_posts/*', '_config.yml'], jekyllRebuild);
 
 
-//  Default task
+// Default task
 // exports.default = gulp.series(browserSync, watch);
-exports.default = browserSync;
+exports.default = browserSyncTask;
 
 // Other tasks
 exports.jekyllBuild = jekyllBuild;
