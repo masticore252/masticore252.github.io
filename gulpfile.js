@@ -9,30 +9,9 @@ var browserSync = require('browser-sync');
 
 var jekyll   = process.platform === 'win32' ? 'jekyll.bat' : 'jekyll';
 
-// Build the Jekyll Site
-gulp.task('jekyll-build', function (done) {
-    return cp.spawn( jekyll , ['build'], {stdio: 'inherit'})
-        .on('close', done);
-});
-
-// Rebuild Jekyll and page reload
-gulp.task('jekyll-rebuild', ['jekyll-build'], function () {
-    browserSync.reload();
-});
-
-// Wait for jekyll-build, then launch the Server
-gulp.task('browser-sync', ['sass', 'img', 'jekyll-build'], function() {
-    browserSync({
-        server: {
-            baseDir: '_site'
-        },
-        notify: false
-    });
-});
-
 // Compile files
-gulp.task('sass', function () {
-    return gulp.src('assets/css/scss/main.scss')
+const sassCompile = function (done) {
+    gulp.src('assets/css/scss/main.scss')
         .pipe(sass({
             outputStyle: 'expanded',
             onError: browserSync.notify
@@ -41,10 +20,12 @@ gulp.task('sass', function () {
         .pipe(gulp.dest('_site/assets/css'))
         .pipe(browserSync.reload({stream:true}))
         .pipe(gulp.dest('assets/css'));
-});
+
+        done();
+}
 
 // Compression images
-gulp.task('img', function() {
+const img = function(done) {
 	return gulp.src('assets/img/**/*')
 		.pipe(cache(imagemin({
 			interlaced: true,
@@ -54,15 +35,47 @@ gulp.task('img', function() {
 		})))
     .pipe(gulp.dest('_site/assets/img'))
     .pipe(browserSync.reload({stream:true}));
+
+    done();
+}
+
+// Build the Jekyll Site
+const jekyllBuild = function (done) {
+    return cp.spawn( jekyll , ['build'], {stdio: 'inherit'})
+        .on('close', done);
+};
+
+// Rebuild Jekyll and page reload
+const jekyllRebuild = gulp.series(jekyllBuild, function (done) {
+    browserSync.reload();
+    done();
 });
 
-// Watch scss, html, img files
-gulp.task('watch', function () {
-    gulp.watch('assets/css/scss/**/*.scss', ['sass']);
-    gulp.watch('assets/js/**/*.js', ['jekyll-rebuild']);
-    gulp.watch('assets/img/**/*', ['img']);
-    gulp.watch(['*.html', '_layouts/*.html', '_includes/*.html', '_pages/*.html', '_posts/*'], ['jekyll-rebuild']);
+// Wait for jekyll-build, then launch the Server
+const browserSyncTask = gulp.series(sassCompile, img, jekyllBuild, function(done) {
+    browserSync({
+        server: {
+            baseDir: '_site'
+        },
+        notify: false
+    });
+    done();
 });
+
+
+gulp.watch('assets/css/scss/**/*.scss', sassCompile);
+gulp.watch('assets/js/**/*.js', jekyllRebuild);
+gulp.watch('assets/img/**/*', img);
+gulp.watch(['*.html', '_layouts/*.html', '_includes/*.html', '_pages/*.html', '_posts/*'], jekyllRebuild);
+
 
 //  Default task
-gulp.task('default', ['browser-sync', 'watch']);
+// exports.default = gulp.series(browserSync, watch);
+exports.default = browserSync;
+
+// Other tasks
+exports.jekyllBuild = jekyllBuild;
+exports.jekyllRebuild = jekyllRebuild;
+exports.browserSync = browserSyncTask;
+exports.sass = sassCompile;
+exports.img = img;
