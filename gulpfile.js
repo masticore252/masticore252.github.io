@@ -9,7 +9,7 @@ var browserSync = require('browser-sync');
 
 var jekyll   = process.platform === 'win32' ? 'jekyll.bat' : 'jekyll';
 
-// Compile files
+// Compile Sass files
 const sassCompile = function (done) {
     return gulp.src('assets/css/scss/main.scss')
         .pipe(sass({
@@ -21,12 +21,13 @@ const sassCompile = function (done) {
         .pipe(gulp.dest('assets/css'));
 }
 
+// Compile javascript with babel
 const babelCompile = function(done) {
     return gulp.src('assets/js/**/*.js')
         .pipe(gulp.dest('_site/assets/js'));
 }
 
-// Compression images
+// Compress images
 const imgCompress = function(done) {
     return gulp.src('assets/img/**/*')
         .pipe(cache(imagemin({
@@ -44,13 +45,13 @@ const jekyllBuild = function (done) {
         .on('close', done);
 };
 
-// Rebuild Jekyll and page reload
+// Page reload
 const browserSyncReload = function (done) {
     browserSync.reload();
     done();
 };
 
-// Wait for jekyll-build, then launch the Server
+// Start the BrowserSync Server
 const browserSyncStart = function (done) {
     browserSync({
         server: {
