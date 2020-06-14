@@ -60,35 +60,43 @@ const browserSyncStart = function (done) {
     done();
 };
 
+// watch for changes
+const watch = function(done) {
+    gulp.watch('assets/img/**/*',           gulp.series(imgCompress, browserSyncReload));
+    gulp.watch('assets/js/**/*.js',         gulp.series(babelCompile,browserSyncReload));
+    gulp.watch('assets/css/scss/**/*.scss', gulp.series(sassCompile, browserSyncReload));
+    gulp.watch([
+            '*.html',
+            '_layouts/*.html',
+            '_includes/*.html',
+            '_pages/*.html',
+            '_posts/*',
+            '_config.yml'
+        ],
+        gulp.series(jekyllBuild, browserSyncReload)
+    );
+    done();
+};
 
-gulp.watch('assets/img/**/*',           gulp.series(imgCompress, browserSyncReload));
-gulp.watch('assets/js/**/*.js',         gulp.series(babelCompile,browserSyncReload));
-gulp.watch('assets/css/scss/**/*.scss', gulp.series(sassCompile, browserSyncReload));
-gulp.watch([
-        '*.html',
-        '_layouts/*.html',
-        '_includes/*.html',
-        '_pages/*.html',
-        '_posts/*',
-        '_config.yml'
-    ],
-    gulp.series(jekyllBuild, browserSyncReload)
-);
-
-
-// Default task
-exports.default = gulp.series(
-    gulp.parallel(
-        sassCompile,
-        babelCompile,
-        imgCompress
-    ),
-    jekyllBuild,
-    browserSyncStart
-);
 
 // Other tasks
 exports.img = imgCompress;
 exports.sass = sassCompile;
 exports.babel = babelCompile;
 exports.jekyll = jekyllBuild;
+
+exports.watch = gulp.series(
+    gulp.parallel(
+        sassCompile,
+        babelCompile,
+        imgCompress
+    ),
+    jekyllBuild,
+    browserSyncStart,
+    watch,
+);
+
+// Default task
+module.exports.default = exports.watch;
+
+
