@@ -7,8 +7,6 @@ var cache = require('gulp-cache');
 var cp = require('child_process');
 var browserSync = require('browser-sync');
 
-var jekyll   = process.platform === 'win32' ? 'jekyll.bat' : 'jekyll';
-
 // Compile Sass files
 const sassCompile = function (done) {
     return gulp.src('assets/css/scss/main.scss')
@@ -41,7 +39,7 @@ const imgCompress = function(done) {
 
 // Build the Jekyll Site
 const jekyllBuild = function (done) {
-    return cp.spawn( jekyll , ['build'], {stdio: 'inherit'})
+    return cp.spawn( 'bundle' , ['exec', 'jekyll', 'build'], {stdio: 'inherit'})
         .on('close', done);
 };
 
